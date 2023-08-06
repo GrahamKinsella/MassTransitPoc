@@ -8,65 +8,51 @@ namespace MassTransitPoc.Producers;
 
 public class InviteStateProducerUseCase : IConsumer<InviteStateProducerRequest>
 {
-    private readonly ITopicProducer<BrandCreatedEvent> _brandCreatedEventProducer;
-    private readonly ITopicProducer<UserCreatedEvent> _userCreatedEventProducer;
-    private readonly ITopicProducer<InviteCreatedEvent> _inviteCreatedEventProducer;
-    private readonly ITopicProducer<EmailSentEvent> _emailSentEventProducer;
+    private readonly ITopicProducer<InviteUpdatedEvent> _inviteUpdatedEventProducer;
+    private readonly ITopicProducer<InviteFailedEvent> _failedEventProducer;
 
-    public InviteStateProducerUseCase([FromServices] ITopicProducer<BrandCreatedEvent> brandCreatedEventProducer,
-        [FromServices] ITopicProducer<UserCreatedEvent> userCreatedEventProducer,
-        [FromServices] ITopicProducer<InviteCreatedEvent> inviteCreatedEventProducer,
-        [FromServices] ITopicProducer<EmailSentEvent> emailSentEventProducer)
+
+    public InviteStateProducerUseCase([FromServices] ITopicProducer<InviteUpdatedEvent> inviteUpdatedEventProducer,
+        [FromServices] ITopicProducer<InviteFailedEvent> failedEventProducer)
     {
-        _brandCreatedEventProducer = brandCreatedEventProducer;
-        _userCreatedEventProducer = userCreatedEventProducer;
-        _inviteCreatedEventProducer = inviteCreatedEventProducer;
-        _emailSentEventProducer = emailSentEventProducer;
+        _inviteUpdatedEventProducer = inviteUpdatedEventProducer;
+        _failedEventProducer = failedEventProducer;
     }
 
     public async Task Consume(ConsumeContext<InviteStateProducerRequest> context)
     {
         //Call brand service
-        Debug.WriteLine($"Producing message of type {context.Message.EventToProduce}");
+        Debug.WriteLine($"Producing message with status {context.Message.Status}");
 
         //produce event
-        switch (context.Message.EventToProduce)
+        switch (context.Message.Status)
         {
-            case nameof(BrandCreatedEvent):
+            case "Failed":
 
-                await _brandCreatedEventProducer.Produce(new BrandCreatedEvent()
-                {
-                    OperationId = context.Message.OperationId
-                });
-                break;
-
-            case nameof(UserCreatedEvent):
-
-                await _userCreatedEventProducer.Produce(new BrandCreatedEvent()
-                {
-                    OperationId = context.Message.OperationId
-                });
-                break;
-
-            case nameof(InviteCreatedEvent):
-
-                await _inviteCreatedEventProducer.Produce(new BrandCreatedEvent()
-                {
-                    OperationId = context.Message.OperationId
-                });
-                break;
-
-            case nameof(EmailSentEvent):
-
-                await _emailSentEventProducer.Produce(new BrandCreatedEvent()
+                await _failedEventProducer.Produce(new InviteFailedEvent()
                 {
                     OperationId = context.Message.OperationId
                 });
                 break;
 
             default:
-                Console.WriteLine("Event not supported");
+                await _inviteUpdatedEventProducer.Produce(new InviteUpdatedEvent
+                {
+                    OperationId = context.Message.OperationId,
+                    Status = context.Message.Status,
+                    Email = context.Message.Email,
+                    BrandName = context.Message.BrandName,
+                    Comments = context.Message.Comments,
+                    IsPlanSupported = context.Message.IsPlanSupported,
+                    OrganisationId = context.Message.OrganisationId,
+                    PartnerId = context.Message.PartnerId,
+                    Plan = context.Message.Plan,
+                    Region = context.Message.Region
+
+
+                });
                 break;
+
         }
 
         await context.RespondAsync(new InviteStateProducerResponse { OperationId = context.Message.OperationId });

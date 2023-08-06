@@ -3,7 +3,6 @@ using MassTransit;
 using MassTransit.Mediator;
 using MassTransitPoc.Producers;
 using MassTransitPoc.UseCases.CreateBrand;
-using MassTransitPoc.UseCases.CreateInvite;
 using MassTransitPoc.UseCases.CreateUser;
 using MassTransitPoc.UseCases.SendEmail;
 
@@ -13,9 +12,9 @@ public class InviteStateMachine :
     MassTransitStateMachine<InviteState>
 {
     //Need to add states for state machine
-    public State BrandCreated { get; private set; }
-    public State UserCreated { get; private set; }
-    public State EmailSent { get; private set; }
+    public State CreateBrand { get; private set; }
+    public State CreateUser { get; private set; }
+    public State SendEmail { get; private set; }
     public State Complete { get; private set; }
     public State Failed { get; private set; }
 
@@ -28,20 +27,14 @@ public class InviteStateMachine :
         InstanceState(x => x.CurrentState);
 
         //On events that are in the Initial state, a new instance of the saga will be created. You can use the SetSagaFactory to control how the saga is instantiated.
-        Event(() => InviteCreatedEvent,
+        Event(() => InviteUpdatedEvent,
             e => e.CorrelateById(cxt => cxt.Message.OperationId));
-        Event(() => BrandCreatedEvent,
-            e => e.CorrelateById(cxt => cxt.Message.OperationId));
-        Event(() => UserCreatedEvent,
-            e => e.CorrelateById(cxt => cxt.Message.OperationId));
-        Event(() => EmailSentEvent,
-            e => e.CorrelateById(cxt => cxt.Message.OperationId));
-        Event(() => FailedEvent,
+        Event(() => InviteFailedEvent,
             e => e.CorrelateById(cxt => cxt.Message.OperationId));
 
         //Can't use a single event and multiple status. State machine has to react to events to change
         Initially(
-            When(InviteCreatedEvent) // the event that should trigger this process flow
+            When(InviteUpdatedEvent) // the event that should trigger this process flow
                 .Then(context =>
                 {
                     context.Saga.CorrelationId = context.Message.OperationId;
@@ -57,68 +50,52 @@ public class InviteStateMachine :
                 })
                 .Then(async context =>
                 {
-                    //use case will call service to do something
-
-                    var client = mediator.CreateRequestClient<CreateBrandRequest>();
-                    var response = await client.GetResponse<CreateBrandResponse>(new CreateBrandRequest
-                    { BrandName = context.Saga.BrandName, Plan = context.Saga.Plan });
-
-                    if (!string.IsNullOrEmpty(response.Message.ErrorMessage))
-                    {
-                        //Produce a Failed event. "Brand Failed to Create"
-                    }
-                    else
-                    {
-                        //can set tenant code on saga here to be used by other mediator requests
-                        context.Saga.TenantCode = response.Message.TenantCode;
-                    }
-                })
-                .Then(async context =>
-                {
                     //produce event to change state of this machine. This will move onto next action
                     await mediator.Publish<InviteStateProducerRequest>(new
-                        { OperationId = context.Message.OperationId, EventToProduce = nameof(BrandCreatedEvent) });
+                    {
+                        OperationId = context.Message.OperationId, 
+                        Status = "CreateBrand",
+                        Plan = context.Saga.Plan,
+                        Region = context.Saga.Region,
+                        Email = context.Saga.Email,
+
+
+
+                    });
                 })
-                .TransitionTo(BrandCreated) //Your next state
+                .TransitionTo(CreateBrand) //Your next state
                 .Then(context =>
-                    Debug.WriteLine("Invite Created and CreateBrandEvent Raised for {0}", context.Saga.CorrelationId)));
+                    Debug.WriteLine("Brand creation requested for saga {0}", context.Saga.CorrelationId)));
 
-        During(BrandCreated, When(BrandCreatedEvent)
-            .Then(async context =>
-            {
-                await mediator.Publish<CreateUserRequest>(new { OperationId = context.Message.OperationId });
-            })
+
+        During(CreateBrand, When(InviteUpdatedEvent)
             .Then(async context =>
             {
                 await mediator.Publish<InviteStateProducerRequest>(new
-                    { OperationId = context.Message.OperationId, EventToProduce = nameof(UserCreatedEvent) });
+                    { OperationId = context.Message.OperationId, Status = "CreateUser" });
             })
-            .TransitionTo(UserCreated)
+            .TransitionTo(CreateUser)
             .Then(context =>
-                Debug.WriteLine("User Created and UserCreatedEvent Raised for {0}", context.Saga.CorrelationId)));
+                Debug.WriteLine("User creation requested for saga {0}", context.Saga.CorrelationId)));
 
-
-        During(UserCreated, When(UserCreatedEvent)
-            .Then(async context =>
-            {
-                await mediator.Publish<SendEmailRequest>(new { OperationId = context.Message.OperationId });
-            })
+        During(CreateUser, When(InviteUpdatedEvent)
             .Then(async context =>
             {
                 await mediator.Publish<InviteStateProducerRequest>(new
-                    { OperationId = context.Message.OperationId, EventToProduce = nameof(EmailSentEvent) });
+                { OperationId = context.Message.OperationId, Status = "SendEmail" });
             })
-            .TransitionTo(EmailSent)
+            .TransitionTo(SendEmail)
             .Then(context =>
-                Debug.WriteLine("Email Sent and EmailSentEvent raisedReady: {0}", context.Saga.CorrelationId)));
+                Debug.WriteLine("Email requested to send for saga {0}", context.Saga.CorrelationId)));
 
-        During(EmailSent, When(EmailSentEvent)
+
+        During(SendEmail, When(InviteUpdatedEvent)
             .TransitionTo(Complete)
             .Then(context => Debug.WriteLine("Saga completed for: {0}", context.Saga.CorrelationId)));
 
         //Will handle failed event raised during any state
-        DuringAny(When(FailedEvent)
-            .Then( context =>
+        DuringAny(When(InviteFailedEvent)
+            .Then(context =>
             {
                 //use case will call service to do something
                 //can set tenant code on saga here to be used by other mediator requests
@@ -132,9 +109,6 @@ public class InviteStateMachine :
         //SetCompletedWhenFinalized();
     }
 
-    public Event<InviteCreatedEvent> InviteCreatedEvent { get; private set; }
-    public Event<BrandCreatedEvent> BrandCreatedEvent { get; private set; }
-    public Event<UserCreatedEvent> UserCreatedEvent { get; private set; }
-    public Event<EmailSentEvent> EmailSentEvent { get; private set; }
-    public Event<FailedEvent> FailedEvent { get; private set; }
+    public Event<InviteUpdatedEvent> InviteUpdatedEvent { get; private set; }
+    public Event<InviteFailedEvent> InviteFailedEvent { get; private set; }
 }
