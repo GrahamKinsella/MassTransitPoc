@@ -17,6 +17,7 @@ public class InviteStateMachine :
     public State UserCreated { get; private set; }
     public State EmailSent { get; private set; }
     public State Complete { get; private set; }
+    public State Failed { get; private set; }
 
 
     public InviteStateMachine(IMediator mediator)
@@ -34,6 +35,8 @@ public class InviteStateMachine :
         Event(() => UserCreatedEvent,
             e => e.CorrelateById(cxt => cxt.Message.OperationId));
         Event(() => EmailSentEvent,
+            e => e.CorrelateById(cxt => cxt.Message.OperationId));
+        Event(() => FailedEvent,
             e => e.CorrelateById(cxt => cxt.Message.OperationId));
 
         //Can't use a single event and multiple status. State machine has to react to events to change
@@ -58,10 +61,17 @@ public class InviteStateMachine :
 
                     var client = mediator.CreateRequestClient<CreateBrandRequest>();
                     var response = await client.GetResponse<CreateBrandResponse>(new CreateBrandRequest
-                        { BrandName = context.Saga.BrandName, Plan = context.Saga.Plan });
+                    { BrandName = context.Saga.BrandName, Plan = context.Saga.Plan });
 
-                    //can set tenant code on saga here to be used by other mediator requests
-                    context.Saga.TenantCode = response.Message.TenantCode;
+                    if (!string.IsNullOrEmpty(response.Message.ErrorMessage))
+                    {
+                        //Produce a Failed event. "Brand Failed to Create"
+                    }
+                    else
+                    {
+                        //can set tenant code on saga here to be used by other mediator requests
+                        context.Saga.TenantCode = response.Message.TenantCode;
+                    }
                 })
                 .Then(async context =>
                 {
@@ -105,6 +115,16 @@ public class InviteStateMachine :
         During(EmailSent, When(EmailSentEvent)
             .TransitionTo(Complete)
             .Then(context => Debug.WriteLine("Saga completed for: {0}", context.Saga.CorrelationId)));
+
+        DuringAny(When(FailedEvent)
+            .Then( context =>
+            {
+                //use case will call service to do something
+                //can set tenant code on saga here to be used by other mediator requests
+                context.Saga.ErrorMessage = context.Message.ErrorMessage;
+            })
+            .TransitionTo(Failed)
+            .Then(context => Debug.WriteLine("Saga Failed for: {0}", context.Saga.CorrelationId)));
         //.Finalize()); //sets saga to final state
 
         //completes and deletes saga from saga repository when state is final
@@ -115,4 +135,5 @@ public class InviteStateMachine :
     public Event<BrandCreatedEvent> CreateBrandEvent { get; private set; }
     public Event<UserCreatedEvent> UserCreatedEvent { get; private set; }
     public Event<EmailSentEvent> EmailSentEvent { get; private set; }
+    public Event<FailedEvent> FailedEvent { get; private set; }
 }

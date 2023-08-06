@@ -20,6 +20,7 @@ public class InviteState : SagaStateMachineInstance
     public string PartnerId { get; set; }
     public string Variant { get; set; }
     public string TenantCode { get; set; }
+    public string ErrorMessage { get; set; }
 
     [JsonProperty("_etag")] 
     public string ETag { get; set; }

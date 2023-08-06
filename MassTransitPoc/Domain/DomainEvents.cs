@@ -31,3 +31,9 @@ public record EmailSentEvent
 {
     public Guid OperationId { get; set; }
 }
+
+public record FailedEvent
+{
+    public Guid OperationId { get; set; }
+    public string ErrorMessage { get; set; }
+}
