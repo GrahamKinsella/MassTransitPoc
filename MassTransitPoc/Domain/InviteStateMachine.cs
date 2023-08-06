@@ -116,6 +116,7 @@ public class InviteStateMachine :
             .TransitionTo(Complete)
             .Then(context => Debug.WriteLine("Saga completed for: {0}", context.Saga.CorrelationId)));
 
+        //Will handle failed event raised during any state
         DuringAny(When(FailedEvent)
             .Then( context =>
             {
