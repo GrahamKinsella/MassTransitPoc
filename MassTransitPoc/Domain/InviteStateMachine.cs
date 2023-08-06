@@ -30,7 +30,7 @@ public class InviteStateMachine :
         //On events that are in the Initial state, a new instance of the saga will be created. You can use the SetSagaFactory to control how the saga is instantiated.
         Event(() => InviteCreatedEvent,
             e => e.CorrelateById(cxt => cxt.Message.OperationId));
-        Event(() => CreateBrandEvent,
+        Event(() => BrandCreatedEvent,
             e => e.CorrelateById(cxt => cxt.Message.OperationId));
         Event(() => UserCreatedEvent,
             e => e.CorrelateById(cxt => cxt.Message.OperationId));
