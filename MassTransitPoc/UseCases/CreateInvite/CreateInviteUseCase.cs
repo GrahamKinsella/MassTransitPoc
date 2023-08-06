@@ -1,29 +1,42 @@
 ﻿using MassTransit;
-using MassTransitPoc.Domain;
-using Microsoft.AspNetCore.Mvc;
+using MassTransit.Mediator;
+using MassTransitPoc.Producers;
 using System.Diagnostics;
 
 namespace MassTransitPoc.UseCases.CreateInvite;
 
 public class CreateInviteUseCase : IConsumer<CreateInviteRequest>
 {
-    private readonly ITopicProducer<InviteCreatedEvent> _producer;
+    private readonly IMediator _mediator;
 
-    public CreateInviteUseCase([FromServices] ITopicProducer<InviteCreatedEvent> producer)
+    public CreateInviteUseCase(IMediator mediator)
     {
-        _producer = producer;
+        _mediator = mediator;
     }
 
     public async Task Consume(ConsumeContext<CreateInviteRequest> context)
     {
-        Debug.WriteLine("Starting invite saga");
-
-        //produce event to kafka to start saga
-        await _producer.Produce(new InviteCreatedEvent
+        try
         {
-            OperationId = context.Message.OperationId
-        });
+            Debug.WriteLine("Starting invite saga");
 
-        await context.RespondAsync(new CreateInviteResponse { OperationId = context.Message.OperationId });
+            //Produce event - this can be through the platform kafka pkg
+            await _mediator.Publish(new InviteStateProducerRequest
+            {
+                Status = "InviteCreated",
+                OperationId = context.Message.OperationId
+            });
+        }
+        catch (Exception ex)
+        {
+            //Logger.Error(ex, "Creating Invite Failed for brand {context.Message.BrandName} Invite id {context.Message.OperationId}")
+            Debug.WriteLine("Creating Invite Failed");
+            await _mediator.Publish(new InviteStateProducerRequest
+            {
+                OperationId = context.Message.OperationId,
+                Status = "InviteFailed",
+                ErrorMessage = "Create Brand Failed"
+            });
+        }
     }
 }

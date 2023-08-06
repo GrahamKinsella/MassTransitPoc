@@ -1,6 +1,7 @@
-﻿namespace MassTransitPoc.UseCases.CreateInvite;
+﻿using MassTransitPoc.UseCases.Common;
 
-public class CreateInviteRequest
+namespace MassTransitPoc.UseCases.CreateInvite;
+
+public class CreateInviteRequest : BaseInviteRequest
 {
-    public Guid OperationId { get; set; }
 }

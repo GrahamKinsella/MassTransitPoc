@@ -1,6 +1,9 @@
-﻿namespace MassTransitPoc.UseCases.SendEmail;
+﻿using MassTransitPoc.UseCases.Common;
 
-public class SendEmailRequest
+namespace MassTransitPoc.UseCases.SendEmail;
+
+public class SendEmailRequest : BaseInviteRequest
 {
-    public Guid OperationId { get; set; }
+    public string Email { get; set; }
+    public string Comments { get; set; }
 }

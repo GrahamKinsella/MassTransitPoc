@@ -1,7 +1,4 @@
-using Confluent.Kafka;
 using MassTransit;
-using MassTransit.KafkaIntegration;
-using MassTransit.KafkaIntegration.Configuration;
 using MassTransitPoc.Consumers;
 using MassTransitPoc.Domain;
 using MassTransitPoc.Producers;
@@ -9,6 +6,7 @@ using MassTransitPoc.UseCases.CreateBrand;
 using MassTransitPoc.UseCases.CreateInvite;
 using MassTransitPoc.UseCases.CreateUser;
 using MassTransitPoc.UseCases.SendEmail;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,16 +24,12 @@ builder.Services.AddMassTransit(x =>
     x.AddRider(rider =>
     {
         //configure producers
-        rider.AddProducer<InviteCreatedEvent>("internal-development-retailer--wizardinvite");
-        rider.AddProducer<BrandCreatedEvent>("internal-development-retailer--brandcreated");
-        rider.AddProducer<UserCreatedEvent>("internal-development-retailer--usercreated");
-        rider.AddProducer<EmailSentEvent>("internal-development-retailer--emailsent");
+        rider.AddProducer<InviteUpdatedEvent>("internal-development-retailer-wizardinviteupdated");
+        rider.AddProducer<InviteFailedEvent>("internal-development-retailer-wizardinvitefailed");
 
         //configure consumers
-        rider.AddConsumer<InviteCreatedConsumer>();
-        rider.AddConsumer<BrandCreatedConsumer>();
-        rider.AddConsumer<SendEmailConsumer>();
-        rider.AddConsumer<UserCreatedConsumer>();
+        rider.AddConsumer<InviteUpdatedEventConsumer>();
+        rider.AddConsumer<InviteFailedEventConsumer>();
 
         rider.AddSagaStateMachine<InviteStateMachine, InviteState>(
                 cfg => cfg.UseInMemoryOutbox()
@@ -64,35 +58,20 @@ builder.Services.AddMassTransit(x =>
             k.Host("localhost:9092");
 
             //environment needs to be resolved
-            k.TopicEndpoint<string, InviteCreatedEvent>("internal-development-retailer-wizardinvite", "development-wizard-internal-api",
+
+            k.TopicEndpoint<InviteUpdatedEvent>("internal-development-retailer-wizardinviteupdated", "development-wizard-internal-api",
                 e =>
                 {
                     e.CreateIfMissing();
-                    e.ConfigureConsumer<InviteCreatedConsumer>(context);
+                    e.ConfigureConsumer<InviteUpdatedEventConsumer>(context);
                     e.ConfigureSaga<InviteState>(context);
                 });
 
-            k.TopicEndpoint<BrandCreatedEvent>("internal-development-retailer-brandcreated", "development-wizard-internal-api",
+            k.TopicEndpoint<InviteFailedEvent>("internal-development-retailer-wizardinvitefailed", "development-wizard-internal-api",
                 e =>
                 {
                     e.CreateIfMissing();
-                    e.ConfigureConsumer<BrandCreatedConsumer>(context);
-                    e.ConfigureSaga<InviteState>(context);
-                });
-
-            k.TopicEndpoint<UserCreatedEvent>("internal-development-retailer-usercreated", "development-wizard-internal-api",
-                e =>
-                {
-                    e.CreateIfMissing();
-                    e.ConfigureConsumer<UserCreatedConsumer>(context);
-                    e.ConfigureSaga<InviteState>(context);
-                });
-
-            k.TopicEndpoint<EmailSentEvent>("internal-development-retailer-emailsent", "development-wizard-internal-api",
-                e =>
-                {
-                    e.CreateIfMissing();
-                    e.ConfigureConsumer<SendEmailConsumer>(context);
+                    e.ConfigureConsumer<InviteFailedEventConsumer>(context);
                     e.ConfigureSaga<InviteState>(context);
                 });
         });
@@ -102,10 +81,10 @@ builder.Services.AddMassTransit(x =>
 builder.Services.AddMediator(cfg =>
 {
     cfg.AddConsumer<CreateInviteUseCase>();
+    cfg.AddConsumer<InviteStateProducerUseCase>();
     cfg.AddConsumer<CreateBrandUseCase>();
     cfg.AddConsumer<CreateUserUseCase>();
     cfg.AddConsumer<SendEmailUseCase>();
-    cfg.AddConsumer<InviteStateProducerUseCase>();
 });
 
 
