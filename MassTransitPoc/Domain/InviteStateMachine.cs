@@ -48,42 +48,17 @@ public class InviteStateMachine :
                     context.Saga.PartnerId = context.Message.PartnerId;
                     context.Saga.Variant = context.Message.Variant;
                 })
-                .Then(async context =>
-                {
-                    //produce event to change state of this machine. This will move onto next action
-                    await mediator.Publish<InviteStateProducerRequest>(new
-                    {
-                        OperationId = context.Message.OperationId, 
-                        Status = "CreateBrand",
-                        Plan = context.Saga.Plan,
-                        Region = context.Saga.Region,
-                        Email = context.Saga.Email,
-
-
-
-                    });
-                })
                 .TransitionTo(CreateBrand) //Your next state
                 .Then(context =>
                     Debug.WriteLine("Brand creation requested for saga {0}", context.Saga.CorrelationId)));
 
 
         During(CreateBrand, When(InviteUpdatedEvent)
-            .Then(async context =>
-            {
-                await mediator.Publish<InviteStateProducerRequest>(new
-                    { OperationId = context.Message.OperationId, Status = "CreateUser" });
-            })
             .TransitionTo(CreateUser)
             .Then(context =>
                 Debug.WriteLine("User creation requested for saga {0}", context.Saga.CorrelationId)));
 
         During(CreateUser, When(InviteUpdatedEvent)
-            .Then(async context =>
-            {
-                await mediator.Publish<InviteStateProducerRequest>(new
-                { OperationId = context.Message.OperationId, Status = "SendEmail" });
-            })
             .TransitionTo(SendEmail)
             .Then(context =>
                 Debug.WriteLine("Email requested to send for saga {0}", context.Saga.CorrelationId)));

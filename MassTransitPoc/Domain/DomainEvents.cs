@@ -7,6 +7,7 @@ public record InviteUpdatedEvent
     public string Email { get; set; }
     public string Comments { get; set; }
     public string BrandName { get; set; }
+    public string TenantCode { get; set; }
     public string OrganisationId { get; set; }
     public string IsPlanSupported { get; set; }
     public string Plan { get; set; }

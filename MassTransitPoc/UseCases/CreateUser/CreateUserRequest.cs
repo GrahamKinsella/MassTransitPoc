@@ -1,6 +1,9 @@
-﻿namespace MassTransitPoc.UseCases.CreateUser;
+﻿using MassTransitPoc.UseCases.Common;
 
-public class CreateUserRequest
+namespace MassTransitPoc.UseCases.CreateUser;
+
+public class CreateUserRequest : BaseInviteRequest
 {
-    public Guid OperationId { get; set; }
+    public string Email { get; set; }
+    public string TenantCode { get; set; }
 }

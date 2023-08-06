@@ -3,6 +3,8 @@ using MassTransitPoc.Domain;
 using System.Diagnostics;
 using MassTransit.Mediator;
 using MassTransitPoc.UseCases.CreateBrand;
+using MassTransitPoc.UseCases.CreateUser;
+using MassTransitPoc.UseCases.SendEmail;
 
 namespace MassTransitPoc.Consumers;
 
@@ -17,25 +19,39 @@ public class InviteUpdatedEventConsumer : IConsumer<InviteUpdatedEvent>
 
     public async Task Consume(ConsumeContext<InviteUpdatedEvent> context)
     {
-
         switch (context.Message.Status)
         {
-            case "CreateBrand":
+            case "InviteCreated":
                 Debug.WriteLine("invoking use case to call brand service to create brand");
-                var client = _mediator.CreateRequestClient<CreateBrandRequest>();
-                var response = await client.GetResponse<CreateBrandResponse>(new CreateBrandRequest
-                    { BrandName = context.Message.BrandName, Plan = context.Message.Plan });
+
+                await _mediator.Send(new CreateBrandRequest
+                {
+                    OperationId = context.Message.OperationId, BrandName = context.Message.BrandName,
+                    Plan = context.Message.Plan
+                }); //theres more here not adding them 
                 break;
 
-            case "CreateUser":
+            case "BrandCreated":
+                await _mediator.Send(new CreateUserRequest
+                {
+                    OperationId = context.Message.OperationId, Email = context.Message.Email,
+                    TenantCode = context.Message.TenantCode
+                });
                 Debug.WriteLine("invoking use case to call user service to create user");
                 break;
 
-            case "SendEmail":
+            case "UserCreated":
+                await _mediator.Send(new SendEmailRequest
+                {
+                    OperationId = context.Message.OperationId, Email = context.Message.Email,
+                    Comments = context.Message.Comments
+                });
                 Debug.WriteLine("invoking use case to call email service to send email");
                 break;
-        }
 
-        await context.RespondAsync(new ConsumerResponse { OperationId = context.Message.OperationId, TenantCode = "Test"});
+            case "Completed":
+                Debug.WriteLine("Saga is complete");
+                break;
+        }
     }
 }
