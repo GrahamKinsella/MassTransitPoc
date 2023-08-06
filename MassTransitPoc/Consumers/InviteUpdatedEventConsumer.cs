@@ -50,7 +50,11 @@ public class InviteUpdatedEventConsumer : IConsumer<InviteUpdatedEvent>
                 break;
 
             case "Completed":
-                Debug.WriteLine("Saga is complete");
+                Debug.WriteLine("Invite Saga is complete");
+                break;
+
+            case "Failed":
+                Debug.WriteLine("Invite Saga Failed");
                 break;
         }
     }
