@@ -54,7 +54,6 @@ builder.Services.AddMassTransit(x =>
                 e =>
                 {
                     e.CreateIfMissing();
-                    e.AutoOffsetReset = AutoOffsetReset.Latest;
                     e.ConfigureConsumer<InviteCreatedConsumer>(context);
                     e.ConfigureSaga<InviteState>(context);
                 });
@@ -63,7 +62,6 @@ builder.Services.AddMassTransit(x =>
                 e =>
                 {
                     e.CreateIfMissing();
-                    e.AutoOffsetReset = AutoOffsetReset.Latest;
                     e.ConfigureConsumer<BrandCreatedConsumer>(context);
                     e.ConfigureSaga<InviteState>(context);
                 });
@@ -72,7 +70,6 @@ builder.Services.AddMassTransit(x =>
                 e =>
                 {
                     e.CreateIfMissing();
-                    e.AutoOffsetReset = AutoOffsetReset.Latest;
                     e.ConfigureConsumer<UserCreatedConsumer>(context);
                     e.ConfigureSaga<InviteState>(context);
                 });
@@ -81,7 +78,6 @@ builder.Services.AddMassTransit(x =>
                 e =>
                 {
                     e.CreateIfMissing();
-                    e.AutoOffsetReset = AutoOffsetReset.Latest;
                     e.ConfigureConsumer<SendEmailConsumer>(context);
                     e.ConfigureSaga<InviteState>(context);
                 });

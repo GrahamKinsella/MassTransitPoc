@@ -23,7 +23,7 @@ public class InviteStateMachine :
         // Tell the saga where to store the current state
         // when ints here theyre assigned values. In this case
         // 0 - None, 1 - Initial, 2 - Final, 3 - BrandCreated, 4 - UserCreated, 5 - EmailSent
-        InstanceState(x => x.CurrentState, BrandCreated, UserCreated, EmailSent);
+        InstanceState(x => x.CurrentState);
 
         //On events that are in the Initial state, a new instance of the saga will be created. You can use the SetSagaFactory to control how the saga is instantiated.
         Event(() => InviteCreatedEvent,

@@ -9,7 +9,7 @@ public class InviteState : SagaStateMachineInstance
     [JsonProperty("id")] 
     public Guid CorrelationId { get; set; }
 
-    public int CurrentState { get; set; }
+    public string CurrentState { get; set; }
 
     [JsonProperty("_etag")] 
     public string ETag { get; set; }
