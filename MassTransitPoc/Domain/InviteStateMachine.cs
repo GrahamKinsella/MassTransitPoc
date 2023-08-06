@@ -83,7 +83,7 @@ public class InviteStateMachine :
                 .Then(context =>
                     Debug.WriteLine("Invite Created and CreateBrandEvent Raised for {0}", context.Saga.CorrelationId)));
 
-        During(BrandCreated, When(CreateBrandEvent)
+        During(BrandCreated, When(BrandCreatedEvent)
             .Then(async context =>
             {
                 await mediator.Publish<CreateUserRequest>(new { OperationId = context.Message.OperationId });
@@ -133,7 +133,7 @@ public class InviteStateMachine :
     }
 
     public Event<InviteCreatedEvent> InviteCreatedEvent { get; private set; }
-    public Event<BrandCreatedEvent> CreateBrandEvent { get; private set; }
+    public Event<BrandCreatedEvent> BrandCreatedEvent { get; private set; }
     public Event<UserCreatedEvent> UserCreatedEvent { get; private set; }
     public Event<EmailSentEvent> EmailSentEvent { get; private set; }
     public Event<FailedEvent> FailedEvent { get; private set; }
