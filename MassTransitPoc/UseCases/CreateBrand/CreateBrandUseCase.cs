@@ -11,6 +11,6 @@ public class CreateBrandUseCase : IConsumer<CreateBrandRequest>
         //Call brand service
         Debug.WriteLine("Calling Brand Service");
 
-        await context.RespondAsync(new CreateBrandResponse { OperationId = context.Message.OperationId });
+        await context.RespondAsync(new CreateBrandResponse { TenantCode = "Test"});
     }
 }

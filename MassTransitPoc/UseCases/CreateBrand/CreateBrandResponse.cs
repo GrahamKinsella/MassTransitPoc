@@ -2,5 +2,5 @@
 
 public class CreateBrandResponse
 {
-    public Guid OperationId { get; set; }
+    public string TenantCode { get; set; }
 }

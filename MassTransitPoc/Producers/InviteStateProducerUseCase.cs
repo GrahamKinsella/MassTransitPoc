@@ -69,6 +69,6 @@ public class InviteStateProducerUseCase : IConsumer<InviteStateProducerRequest>
                 break;
         }
 
-        await context.RespondAsync(new CreateBrandResponse { OperationId = context.Message.OperationId });
+        await context.RespondAsync(new InviteStateProducerResponse { OperationId = context.Message.OperationId });
     }
 }

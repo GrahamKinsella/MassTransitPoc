@@ -3,6 +3,7 @@ using MassTransit;
 using MassTransit.Mediator;
 using MassTransitPoc.Producers;
 using MassTransitPoc.UseCases.CreateBrand;
+using MassTransitPoc.UseCases.CreateInvite;
 using MassTransitPoc.UseCases.CreateUser;
 using MassTransitPoc.UseCases.SendEmail;
 
@@ -38,11 +39,29 @@ public class InviteStateMachine :
         //Can't use a single event and multiple status. State machine has to react to events to change
         Initially(
             When(InviteCreatedEvent) // the event that should trigger this process flow
-                .Then(context => { context.Saga.CorrelationId = context.Message.OperationId; })
+                .Then(context =>
+                {
+                    context.Saga.CorrelationId = context.Message.OperationId;
+                    context.Saga.Email = context.Message.Email;
+                    context.Saga.Comments = context.Message.Comments;
+                    context.Saga.BrandName = context.Message.BrandName;
+                    context.Saga.IsPlanSupported = context.Message.IsPlanSupported;
+                    context.Saga.OrganisationId = context.Message.OrganisationId;
+                    context.Saga.Plan = context.Message.Plan;
+                    context.Saga.Region = context.Message.Region;
+                    context.Saga.PartnerId = context.Message.PartnerId;
+                    context.Saga.Variant = context.Message.Variant;
+                })
                 .Then(async context =>
                 {
                     //use case will call service to do something
-                   await mediator.Publish<CreateBrandRequest>(new { OperationId = context.Message.OperationId });
+
+                    var client = mediator.CreateRequestClient<CreateBrandRequest>();
+                    var response = await client.GetResponse<CreateBrandResponse>(new CreateBrandRequest
+                        { BrandName = context.Saga.BrandName, Plan = context.Saga.Plan });
+
+                    //can set tenant code on saga here to be used by other mediator requests
+                    context.Saga.TenantCode = response.Message.TenantCode;
                 })
                 .Then(async context =>
                 {
@@ -70,7 +89,10 @@ public class InviteStateMachine :
 
 
         During(UserCreated, When(UserCreatedEvent)
-            .Then(async context => { await mediator.Publish<SendEmailRequest>(new { OperationId = context.Message.OperationId }); })
+            .Then(async context =>
+            {
+                await mediator.Publish<SendEmailRequest>(new { OperationId = context.Message.OperationId });
+            })
             .Then(async context =>
             {
                 await mediator.Publish<InviteStateProducerRequest>(new
