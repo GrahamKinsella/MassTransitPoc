@@ -1,6 +1,7 @@
 using Confluent.Kafka;
 using MassTransit;
 using MassTransit.KafkaIntegration;
+using MassTransit.KafkaIntegration.Configuration;
 using MassTransitPoc.Consumers;
 using MassTransitPoc.Domain;
 using MassTransitPoc.Producers;
@@ -25,10 +26,10 @@ builder.Services.AddMassTransit(x =>
     x.AddRider(rider =>
     {
         //configure producers
-        rider.AddProducer<InviteCreatedEvent>("internal-retailer-wizardinvite");
-        rider.AddProducer<BrandCreatedEvent>("internal-retailer-brandcreated");
-        rider.AddProducer<UserCreatedEvent>("internal-retailer-usercreated");
-        rider.AddProducer<EmailSentEvent>("internal-retailer-emailsent");
+        rider.AddProducer<InviteCreatedEvent>("internal-development-retailer--wizardinvite");
+        rider.AddProducer<BrandCreatedEvent>("internal-development-retailer--brandcreated");
+        rider.AddProducer<UserCreatedEvent>("internal-development-retailer--usercreated");
+        rider.AddProducer<EmailSentEvent>("internal-development-retailer--emailsent");
 
         //configure consumers
         rider.AddConsumer<InviteCreatedConsumer>();
@@ -48,9 +49,22 @@ builder.Services.AddMassTransit(x =>
 
         rider.UsingKafka((context, k) =>
         {
+            //lower env config
+
+            //k.Host("localhost:9092", h =>
+            //{
+            //    h.UseSasl(x =>
+            //    {
+            //        x.Username = "API Key"; Get from KV
+            //        x.Password = "API secret"; Get from KV
+            //        x.SecurityProtocol = SecurityProtocol.Plaintext;
+            //    });
+            //});
+
             k.Host("localhost:9092");
 
-            k.TopicEndpoint<string, InviteCreatedEvent>("internal-retailer-wizardinvite", "wizard-internal-consumer",
+            //environment needs to be resolved
+            k.TopicEndpoint<string, InviteCreatedEvent>("internal-development-retailer-wizardinvite", "development-wizard-internal-api",
                 e =>
                 {
                     e.CreateIfMissing();
@@ -58,7 +72,7 @@ builder.Services.AddMassTransit(x =>
                     e.ConfigureSaga<InviteState>(context);
                 });
 
-            k.TopicEndpoint<BrandCreatedEvent>("internal-retailer-brandcreated", "wizard-internal-consumer",
+            k.TopicEndpoint<BrandCreatedEvent>("internal-development-retailer-brandcreated", "development-wizard-internal-api",
                 e =>
                 {
                     e.CreateIfMissing();
@@ -66,7 +80,7 @@ builder.Services.AddMassTransit(x =>
                     e.ConfigureSaga<InviteState>(context);
                 });
 
-            k.TopicEndpoint<UserCreatedEvent>("internal-retailer-usercreated", "wizard-internal-consumer",
+            k.TopicEndpoint<UserCreatedEvent>("internal-development-retailer-usercreated", "development-wizard-internal-api",
                 e =>
                 {
                     e.CreateIfMissing();
@@ -74,7 +88,7 @@ builder.Services.AddMassTransit(x =>
                     e.ConfigureSaga<InviteState>(context);
                 });
 
-            k.TopicEndpoint<EmailSentEvent>("internal-retailer-emailsent", "wizard-internal-consumer",
+            k.TopicEndpoint<EmailSentEvent>("internal-development-retailer-emailsent", "development-wizard-internal-api",
                 e =>
                 {
                     e.CreateIfMissing();
