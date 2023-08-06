@@ -104,8 +104,8 @@ public class InviteStateMachine :
 
         During(EmailSent, When(EmailSentEvent)
             .TransitionTo(Complete)
-            .Then(context => Debug.WriteLine("Saga completed for: {0}", context.Saga.CorrelationId))
-            .Finalize()); //sets saga to final state
+            .Then(context => Debug.WriteLine("Saga completed for: {0}", context.Saga.CorrelationId)));
+        //.Finalize()); //sets saga to final state
 
         //completes and deletes saga from saga repository when state is final
         //SetCompletedWhenFinalized();
