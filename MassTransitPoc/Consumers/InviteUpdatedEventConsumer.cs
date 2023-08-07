@@ -49,7 +49,7 @@ public class InviteUpdatedEventConsumer : IConsumer<InviteUpdatedEvent>
                 Debug.WriteLine("invoking use case to call email service to send email");
                 break;
 
-            case "Completed":
+            case "Complete":
                 Debug.WriteLine("Invite Saga is complete");
                 break;
 

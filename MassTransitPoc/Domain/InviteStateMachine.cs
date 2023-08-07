@@ -1,10 +1,6 @@
 ﻿using System.Diagnostics;
 using MassTransit;
 using MassTransit.Mediator;
-using MassTransitPoc.Producers;
-using MassTransitPoc.UseCases.CreateBrand;
-using MassTransitPoc.UseCases.CreateUser;
-using MassTransitPoc.UseCases.SendEmail;
 
 namespace MassTransitPoc.Domain;
 
@@ -19,7 +15,7 @@ public class InviteStateMachine :
     public State Failed { get; private set; }
 
 
-    public InviteStateMachine(IMediator mediator)
+    public InviteStateMachine()
     {
         // Tell the saga where to store the current state
         // when ints here theyre assigned values. In this case
@@ -28,16 +24,18 @@ public class InviteStateMachine :
 
         //On events that are in the Initial state, a new instance of the saga will be created. You can use the SetSagaFactory to control how the saga is instantiated.
         Event(() => InviteUpdatedEvent,
-            e => e.CorrelateById(cxt => cxt.Message.OperationId));
+            e => e.CorrelateBy((state, context) => state.OperationId == context.Message.OperationId)
+                .SelectId(context => Guid.NewGuid()));
         Event(() => InviteFailedEvent,
-            e => e.CorrelateById(cxt => cxt.Message.OperationId));
+            e => e.CorrelateBy((saga, context) => saga.OperationId == context.Message.OperationId)
+                .SelectId(context => Guid.NewGuid()));
 
         //Can't use a single event and multiple status. State machine has to react to events to change
         Initially(
             When(InviteUpdatedEvent) // the event that should trigger this process flow
                 .Then(context =>
                 {
-                    context.Saga.CorrelationId = context.Message.OperationId;
+                    context.Saga.OperationId = context.Message.OperationId;
                     context.Saga.Email = context.Message.Email;
                     context.Saga.Comments = context.Message.Comments;
                     context.Saga.BrandName = context.Message.BrandName;

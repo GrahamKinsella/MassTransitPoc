@@ -8,6 +8,7 @@ public class InviteState : SagaStateMachineInstance
     /// <inheritdoc />
     [JsonProperty("id")] 
     public Guid CorrelationId { get; set; }
+    public string OperationId { get; set; }
 
     public string CurrentState { get; set; }
     public string Email { get; set; }

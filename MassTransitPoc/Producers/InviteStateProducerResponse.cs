@@ -2,5 +2,5 @@
 
 public class InviteStateProducerResponse
 {
-    public Guid OperationId { get; set; }
+    public string OperationId { get; set; }
 }

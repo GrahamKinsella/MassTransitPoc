@@ -2,5 +2,5 @@
 
 public class CreateUserResponse
 {
-    public Guid OperationId { get; set; }
+    public string OperationId { get; set; }
 }

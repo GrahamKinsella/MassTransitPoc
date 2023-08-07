@@ -3,7 +3,7 @@
 //Events
 public record InviteUpdatedEvent
 {
-    public Guid OperationId { get; set; }
+    public string OperationId { get; set; }
     public string Email { get; set; }
     public string Comments { get; set; }
     public string BrandName { get; set; }
@@ -19,6 +19,6 @@ public record InviteUpdatedEvent
 
 public record InviteFailedEvent
 {
-    public Guid OperationId { get; set; }
+    public string OperationId { get; set; }
     public string ErrorMessage { get; set; }
 }

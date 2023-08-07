@@ -2,5 +2,5 @@
 
 public class BaseInviteRequest
 {
-    public Guid OperationId { get; set; }
+    public string OperationId { get; set; }
 }

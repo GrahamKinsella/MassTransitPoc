@@ -2,5 +2,5 @@
 
 public class CreateInviteResponse
 {
-    public Guid OperationId { get; set; }
+    public string OperationId { get; set; }
 }
