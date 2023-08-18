@@ -1,5 +1,6 @@
 ﻿using MassTransit;
 using MassTransit.Mediator;
+using MassTransitPoc.Consumers;
 using MassTransitPoc.Producers;
 using System.Diagnostics;
 
@@ -26,6 +27,7 @@ public class CreateInviteUseCase : IConsumer<CreateInviteRequest>
                 Status = "InviteCreated",
                 OperationId = context.Message.OperationId
             });
+            await context.RespondAsync(new CreateInviteResponse { OperationId = context.Message.OperationId });
         }
         catch (Exception ex)
         {
@@ -37,6 +39,7 @@ public class CreateInviteUseCase : IConsumer<CreateInviteRequest>
                 Status = "InviteFailed",
                 ErrorMessage = "Create Brand Failed"
             });
+            await context.RespondAsync(new CreateInviteResponse { OperationId = context.Message.OperationId });
         }
     }
 }
